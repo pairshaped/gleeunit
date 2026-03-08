@@ -1,6 +1,6 @@
 -module(gleeunit_ffi).
 
--export([find_files/2, run_eunit/2]).
+-export([find_files/2, run_eunit/2, run_eunit_parallel/2, run_eunit_parallel_capped/3]).
 
 find_files(Pattern, In) ->
   Results = filelib:wildcard(binary_to_list(Pattern), binary_to_list(In)),
@@ -11,11 +11,36 @@ run_eunit(Tests, Options) ->
         non_existing ->
             gleeunit@internal@reporting:eunit_missing();
 
-        _ -> 
+        _ ->
             case eunit:test(Tests, Options) of
                 ok -> {ok, nil};
                 error -> {error, nil};
                 {error, Term} -> {error, Term}
             end
     end.
-    
+
+run_eunit_parallel(Tests, Options) ->
+    case code:which(eunit) of
+        non_existing ->
+            gleeunit@internal@reporting:eunit_missing();
+
+        _ ->
+            case eunit:test({inparallel, Tests}, Options) of
+                ok -> {ok, nil};
+                error -> {error, nil};
+                {error, Term} -> {error, Term}
+            end
+    end.
+
+run_eunit_parallel_capped(Tests, Max, Options) ->
+    case code:which(eunit) of
+        non_existing ->
+            gleeunit@internal@reporting:eunit_missing();
+
+        _ ->
+            case eunit:test({inparallel, Max, Tests}, Options) of
+                ok -> {ok, nil};
+                error -> {error, nil};
+                {error, Term} -> {error, Term}
+            end
+    end.
